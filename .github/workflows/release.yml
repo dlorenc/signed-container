@@ -1,12 +1,6 @@
 on:
-  # Trigger the workflow on merges to main or releases.
-  push:
-    branches:
-      - main
-  # Also trigger on page_build, as well as release created events
-  page_build:
   release:
-    types: # This configuration does not affect the page_build event above
+    types: 
       - created
 jobs:
   build-and-push:
@@ -17,13 +11,18 @@ jobs:
         with:
           go-version: 1.16
       - uses: actions/checkout@v2
+      # this is just to install the cosign binary. We'll have a real action someday.
       - name: cosign
-        run: go install  github.com/sigstore/cosign/cmd/cosign@eb0200a289e43359fde58c1a88409767a51cd8ad
+        run: go install github.com/sigstore/cosign/cmd/cosign@eb0200a289e43359fde58c1a88409767a51cd8ad
+      # Setup whatever creds you need to push to your registry.
       - name: login
         run: docker login --username dlorenc --password ${{ secrets.DockerLogin }}
-      - name: build
-        run: docker build . -t dlorenc/signed-container:$GITHUB_SHA
+      # This flow assumes the images are built in CI first. We don't build a new one as part of the release.
+      # We retag it.
+      - name: pull-tag
+        run: docker pull dlorenc/signed-container:$GITHUB_SHA && docker tag dlorenc/signed-container:$GITHUB_SHA dlorenc/signed-container:$(git tag)
       - name: push
-        run: docker push dlorenc/signed-container:$GITHUB_SHA
+        run: docker push dlorenc/signed-container:$(git tag)
+      # And now we sign! We include the commit the image was built at and the git tag **in the signed portion**
       - name: sign
-        run: echo -n "${{secrets.CosignPassword}}" | cosign sign -key cosign.key -a git_sha=$git_sha dlorenc/signed-container:$GITHUB_SHA
+        run: echo -n "${{secrets.CosignPassword}}" | cosign sign -key cosign.key -a git_sha=$GITHUB_SHA -a git_tag=$(git tag) dlorenc/signed-container:$(git tag)
