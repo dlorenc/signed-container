@@ -11,18 +11,16 @@ jobs:
         with:
           go-version: 1.16
       - uses: actions/checkout@v2
-      # this is just to install the cosign binary. We'll have a real action someday.
-      - name: cosign
-        run: go install github.com/sigstore/cosign/cmd/cosign@eb0200a289e43359fde58c1a88409767a51cd8ad
+      - uses: sigstore/cosign-installer@main
       # Setup whatever creds you need to push to your registry.
       - name: login
-        run: docker login --username dlorenc --password ${{ secrets.DockerLogin }}
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       # This flow assumes the images are built in CI first. We don't build a new one as part of the release.
       # We retag it.
       - name: pull-tag
-        run: docker pull dlorenc/signed-container:$GITHUB_SHA && docker tag dlorenc/signed-container:$GITHUB_SHA dlorenc/signed-container:$(git tag)
+        run: docker pull ghcr.io/dlorenc/signed-container:$GITHUB_SHA && docker tag ghcr.io/dlorenc/signed-container:$GITHUB_SHA ghcr.io/dlorenc/signed-container:$(git tag)
       - name: push
-        run: docker push dlorenc/signed-container:$(git tag)
+        run: docker push ghcr.io/dlorenc/signed-container:$(git tag)
       # And now we sign! We include the commit the image was built at and the git tag **in the signed portion**
       - name: sign
-        run: echo -n "${{secrets.CosignPassword}}" | cosign sign -key cosign.key -a git_sha=$GITHUB_SHA -a git_tag=$(git tag) dlorenc/signed-container:$(git tag)
+        run: echo -n "${{secrets.CosignPassword}}" | cosign sign -key cosign.key -a git_sha=$GITHUB_SHA -a git_tag=$(git tag) ghcr.io/dlorenc/signed-container:$(git tag)
