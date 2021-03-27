@@ -4,9 +4,9 @@ A signed container example, with cosign.
 
 ## How It Works
 
-This container image is built and pushed to Docker Hub at `dlorenc/signed-container` every time a commit is merged to main.
+This container image is built and pushed to GitHub Container Registry at `ghcr.io/dlorenc/signed-container` every time a commit is merged to main.
 The containers are tagged with the git commit the container was built at.
-For example: `dlorenc/signed-container:a5525b0df6fb6683cd2a01e01dfb0c92252b1b65` was built at the commit `a5525b0df6fb6683cd2a01e01dfb0c92252b1b65`.
+For example: `ghcr.io/dlorenc/signed-container:b018f3ffe2474a9c507cbd5320f47651453d4b19` was built at the commit `b018f3ffe2474a9c507cbd5320f47651453d4b19`.
 
 The public key that can be used to verify each container image is stored right in the git repo, in the file `cosign.pub`.
 The private key is also stored right here (encrypted!) in `cosign.key`.
@@ -25,7 +25,7 @@ present in the repo **at that time**.
 You can do a simple verification with:
 
 ```shell
-$ cosign verify -key cosign.pub dlorenc/signed-container:v0.0.1 | jq .
+$ cosign verify -key cosign.pub ghcr.io/dlorenc/signed-container:v0.0.2 | jq .
 The following checks were performed on these signatures:
   - The cosign claims were validated
   - The signatures were verified against the specified public key
@@ -35,12 +35,13 @@ The following checks were performed on these signatures:
       "docker-reference": ""
     },
     "Image": {
-      "Docker-manifest-digest": "sha256:b5d83b473776186d1b3670433d759c786ec413aacf46c5fad606b11043d0368d"
+      "Docker-manifest-digest": "sha256:ca4c4567389ae76034040fed221c97bf12e814201f7c0633fde95fe9320ccabc"
     },
     "Type": "cosign container signature"
   },
   "Optional": {
-    "git_sha": "a5525b0df6fb6683cd2a01e01dfb0c92252b1b65"
+    "git_sha": "6f8e963d1a4185c9e3fa58c39be1e77fdfe3c16d",
+    "git_tag": "v0.0.2"
   }
 }
 ```
@@ -53,7 +54,7 @@ The continuous CI builds are signed with an extra annotation including the git c
 This can be verified with:
 
 ```
-$ cosign verify -a  git_sha=$(git rev-parse HEAD) -key cosign.pub dlorenc/signed-container:v0.0.1 | jq .
+$ cosign verify -a  git_sha=$(git rev-parse HEAD) -key cosign.pub ghcr.io/dlorenc/signed-container:v0.0.2 | jq .
 The following checks were performed on these signatures:
   - The specified annotations were verified.
   - The cosign claims were validated
@@ -64,12 +65,12 @@ The following checks were performed on these signatures:
       "docker-reference": ""
     },
     "Image": {
-      "Docker-manifest-digest": "sha256:b5d83b473776186d1b3670433d759c786ec413aacf46c5fad606b11043d0368d"
+      "Docker-manifest-digest": "sha256:ca4c4567389ae76034040fed221c97bf12e814201f7c0633fde95fe9320ccabc"
     },
     "Type": "cosign container signature"
   },
   "Optional": {
-    "git_sha": "a5525b0df6fb6683cd2a01e01dfb0c92252b1b65"
+    "git_sha": "6f8e963d1a4185c9e3fa58c39be1e77fdfe3c16d"
   }
 }
 ```
@@ -79,7 +80,7 @@ The following checks were performed on these signatures:
 The release builds are signed with another extra annotation including the git tag (in addition to the commit):
 
 ```
-$ cosign verify -a  git_sha=$(git rev-parse v0.0.1) -key cosign.pub dlorenc/signed-container:v0.0.1 | jq .
+$ cosign verify -a  git_sha=$(git rev-parse v0.0.1) -key cosign.pub ghcr.io/dlorenc/signed-container:v0.0.2 | jq .
 The following checks were performed on these signatures:
   - The specified annotations were verified.
   - The cosign claims were validated
@@ -90,13 +91,13 @@ The following checks were performed on these signatures:
       "docker-reference": ""
     },
     "Image": {
-      "Docker-manifest-digest": "sha256:b5d83b473776186d1b3670433d759c786ec413aacf46c5fad606b11043d0368d"
+      "Docker-manifest-digest": "sha256:ca4c4567389ae76034040fed221c97bf12e814201f7c0633fde95fe9320ccabc"
     },
     "Type": "cosign container signature"
   },
   "Optional": {
-    "git_sha": "a5525b0df6fb6683cd2a01e01dfb0c92252b1b65",
-    "git_tag": "v0.0.1"
+    "git_sha": "6f8e963d1a4185c9e3fa58c39be1e77fdfe3c16d",
+    "git_tag": "v0.0.2"
   }
 }
 ```
