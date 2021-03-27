@@ -13,12 +13,12 @@ jobs:
           go-version: 1.16
       - uses: actions/checkout@v2
       - name: cosign
-        run: go install  github.com/sigstore/cosign/cmd/cosign@eb0200a289e43359fde58c1a88409767a51cd8ad
+        run: go install github.com/sigstore/cosign/cmd/cosign@latest
       - name: login
-        run: docker login --username dlorenc --password ${{ secrets.DockerLogin }}
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: build
-        run: docker build . -t dlorenc/signed-container:$GITHUB_SHA
+        run: docker build . -t ghcr.io/dlorenc/signed-container:$GITHUB_SHA
       - name: push
-        run: docker push dlorenc/signed-container:$GITHUB_SHA
+        run: docker push ghcr.io/dlorenc/signed-container:$GITHUB_SHA
       - name: sign
-        run: echo -n "${{secrets.CosignPassword}}" | cosign sign -key cosign.key -a git_sha=$GITHUB_SHA dlorenc/signed-container:$GITHUB_SHA
+        run: echo -n "${{secrets.CosignPassword}}" | cosign sign -key cosign.key -a git_sha=$GITHUB_SHA ghcr.io/dlorenc/signed-container:$GITHUB_SHA
