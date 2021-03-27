@@ -12,8 +12,7 @@ jobs:
         with:
           go-version: 1.16
       - uses: actions/checkout@v2
-      - name: cosign
-        run: go install github.com/sigstore/cosign/cmd/cosign@latest
+      - uses: sigstore/cosign-installer@main
       - name: login
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: build
