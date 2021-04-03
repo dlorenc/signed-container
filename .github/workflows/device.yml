@@ -1,0 +1,24 @@
+on:
+  # Trigger the workflow on merges to device branch
+  push:
+    branches:
+      - device
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # These are only needed because we don't have cosign published yet!
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - uses: actions/checkout@v2
+      - name: cosign
+        run: go install github.com/sigstore/cosign/cmd/cosign@0ee388bc6321abf30b67c4893ca3696b20602d93
+      - name: login
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: build
+        run: docker build . -t ghcr.io/dlorenc/signed-container:$GITHUB_SHA
+      - name: push
+        run: docker push ghcr.io/dlorenc/signed-container:$GITHUB_SHA
+      - name: sign
+        run: true | COSIGN_EXPERIMENTAL=1 cosign sign -a git_sha=$GITHUB_SHA ghcr.io/dlorenc/signed-container:$GITHUB_SHA
